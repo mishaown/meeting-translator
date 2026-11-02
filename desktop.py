@@ -65,13 +65,10 @@ def main():
     result = {"ok": False, "window_loaded": False}
     watchdog = None
     try:
-        if sys.platform == "win32":
-            from platform_support import target_platform
+        from platform_support import target_platform
 
-            if target_platform() == "windows-arm64":
-                raise RuntimeError(
-                    "Use the Windows x64 desktop release on ARM64 through emulation, or launch local_app.py for native ARM64 browser mode."
-                )
+        native_arm = sys.platform == "win32" and target_platform() == "windows-arm64"
+        if sys.platform == "win32" and not native_arm:
             import webview.platforms.winforms
         if args.self_test or args.smoke_test:
             import sherpa_onnx  # Ensure the packaged diarization extension and its DLLs load.
@@ -85,6 +82,10 @@ def main():
             assert (ASSET_ROOT / "Capture.cs").is_file()
             for task in ("transcription", "translation"):
                 executable, _ = candidates(task, "cpu")[0]
+                if native_arm:
+                    from platform_support import require_arm64_binary
+
+                    require_arm64_binary(executable)
                 subprocess.run(
                     [str(executable), "--help"],
                     stdout=subprocess.DEVNULL,
@@ -96,9 +97,51 @@ def main():
             http = urllib.request.build_opener(urllib.request.ProxyHandler({}))
             with http.open(url + "/api/health", timeout=5) as response:
                 assert json.load(response)["app"] == "meeting-desk"
+            if native_arm:
+                import ctypes
+                from platform_support import require_arm64_binary
+
+                for binary in (
+                    Path(sys.executable),
+                    ASSET_ROOT / "runtime/windows-host/MeetingTranslatorHost.exe",
+                    ASSET_ROOT / "runtime/windows-host/WebView2Loader.dll",
+                ):
+                    require_arm64_binary(binary)
+                ctypes.WinDLL(
+                    str(ASSET_ROOT / "runtime/windows-host/WebView2Loader.dll")
+                )
+                result["architecture"] = "windows-arm64"
             result["ok"] = True
             if args.self_test and not args.smoke_test:
                 return 0
+
+        if native_arm:
+            host = ASSET_ROOT / "runtime/windows-host/MeetingTranslatorHost.exe"
+            if not host.is_file():
+                raise RuntimeError(
+                    "Build the native window host with setup_windows_host.py first."
+                )
+            command = [
+                str(host),
+                url,
+                str(DATA_ROOT / "webview-arm64"),
+                str(os.getpid()),
+            ]
+            if args.smoke_test:
+                command.append("--smoke-test")
+            with (logs / "native-window.log").open("wb") as output:
+                process = subprocess.run(
+                    command,
+                    stdout=output,
+                    stderr=output,
+                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                )
+            result["window_loaded"] = process.returncode == 0
+            if process.returncode != 0:
+                raise RuntimeError(
+                    f"Native ARM64 window exited with code {process.returncode}. See {logs / 'native-window.log'}."
+                )
+            return 0
 
         import webview
 

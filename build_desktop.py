@@ -13,10 +13,6 @@ from platform_support import target_platform
 def main():
     root = Path(__file__).resolve().parent
     target = target_platform()
-    if target == "windows-arm64":
-        raise RuntimeError(
-            "Build the Windows desktop with x64 Python. Its executable also runs on Windows ARM64 through emulation; native ARM64 browser mode remains available."
-        )
     subprocess.run(
         [
             sys.executable,
@@ -34,11 +30,22 @@ def main():
         else "dist/MeetingTranslator.app/Contents/MacOS/MeetingTranslator"
     )
     with tempfile.TemporaryDirectory() as directory:
-        subprocess.run(
-            [str(executable), "--self-test", "--data-dir", directory],
-            check=True,
-            timeout=120,
-        )
+        try:
+            subprocess.run(
+                [str(executable), "--self-test", "--data-dir", directory],
+                check=True,
+                timeout=120,
+            )
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+            for path in (
+                Path(directory) / "startup-error.log",
+                Path(directory) / "logs/desktop.log",
+            ):
+                if path.is_file():
+                    print(
+                        path.read_text(encoding="utf-8", errors="replace"), flush=True
+                    )
+            raise
         assert (
             Path(directory) / "logs/self-test.json"
         ).is_file(), "Frozen self-test did not run"

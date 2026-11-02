@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 3.20)
+project(MeetingTranslatorHost LANGUAGES CXX)
+
+if(NOT WIN32 OR NOT DEFINED WEBVIEW2_SDK)
+  message(FATAL_ERROR "Build on Windows with -DWEBVIEW2_SDK=<verified NuGet directory>")
+endif()
+
+add_executable(MeetingTranslatorHost WIN32 host.cpp)
+target_compile_features(MeetingTranslatorHost PRIVATE cxx_std_17)
+target_compile_definitions(MeetingTranslatorHost PRIVATE UNICODE _UNICODE WIN32_LEAN_AND_MEAN NOMINMAX _WIN32_WINNT=0x0A00)
+target_include_directories(MeetingTranslatorHost PRIVATE "${WEBVIEW2_SDK}/build/native/include")
+target_link_libraries(MeetingTranslatorHost PRIVATE ole32 user32 shell32)
+if(MSVC)
+  target_compile_options(MeetingTranslatorHost PRIVATE /W4 /EHsc /utf-8)
+  set_property(TARGET MeetingTranslatorHost PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
