@@ -10,10 +10,44 @@ import app_paths
 import capture
 from gui_runtime import Application, Store
 from model_setup import ModelSetup
-from platform_support import target_platform
+from platform_support import target_platform, require_arm64_binary
 
 
 class DesktopTests(unittest.TestCase):
+    def test_reopening_lightweight_install_selects_available_models(self):
+        installed = {
+            "transcription": [
+                {"id": "tiny", "installed": True},
+                {"id": "base", "installed": False},
+            ],
+            "translation": [
+                {"id": "qwen25-1.5b", "installed": False},
+                {"id": "whisper", "installed": True},
+            ],
+        }
+        with tempfile.TemporaryDirectory() as directory, patch(
+            "gui_runtime.catalog", return_value=installed
+        ):
+            for _ in range(2):
+                app = Application(Store(directory))
+                self.assertEqual(app.defaults["model"], "tiny")
+                self.assertEqual(app.defaults["translation_model"], "whisper")
+                self.assertTrue(app.defaults["translation"])
+
+    def test_native_arm_validation_rejects_emulated_x64_payloads(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "host.exe"
+            header = bytearray(0x86)
+            header[:2] = b"MZ"
+            header[0x3C:0x40] = (0x80).to_bytes(4, "little")
+            header[0x80:0x86] = b"PE\0\0\x64\x86"
+            path.write_bytes(header)
+            with self.assertRaisesRegex(RuntimeError, "Native ARM64 binary required"):
+                require_arm64_binary(path)
+            header[0x84:0x86] = b"\x64\xaa"
+            path.write_bytes(header)
+            require_arm64_binary(path)
+
     def test_frozen_data_is_outside_the_application_bundle(self):
         with patch.dict(
             os.environ,

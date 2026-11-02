@@ -3,10 +3,12 @@
 from pathlib import Path
 import sys
 from importlib.metadata import distributions
+import sysconfig
 
 from PyInstaller.utils.hooks import collect_all
 
 root = Path(SPECPATH)
+native_arm = sys.platform == "win32" and sysconfig.get_platform() == "win-arm64"
 datas = [(str(root / name), name) for name in ("web", "licenses")]
 datas += [
     (str(root / name), ".")
@@ -52,6 +54,13 @@ folders = (
     if sys.platform == "win32"
     else ("whisper-macos/bin", "llama")
 )
+if native_arm:
+    folders += ("windows-host",)
+    folders += tuple(
+        folder
+        for folder in ("whisper-opencl", "llama-opencl")
+        if (root / "runtime" / folder).is_dir()
+    )
 for folder in folders:
     base = root / "runtime" / folder
     if not base.is_dir():
@@ -65,6 +74,7 @@ for folder in folders:
             in (
                 "whisper-server.exe",
                 "llama-server.exe",
+                "MeetingTranslatorHost.exe",
                 "whisper-server",
                 "llama-server",
             )
@@ -80,11 +90,16 @@ a = Analysis(
     datas=datas + speaker_data,
     hiddenimports=speaker_imports
     + (
-        ["webview.platforms.winforms", "webview.platforms.edgechromium"]
-        if sys.platform == "win32"
-        else ["webview.platforms.cocoa", "sounddevice"]
+        []
+        if native_arm
+        else (
+            ["webview.platforms.winforms", "webview.platforms.edgechromium"]
+            if sys.platform == "win32"
+            else ["webview.platforms.cocoa", "sounddevice"]
+        )
     ),
-    excludes=[
+    excludes=(["webview", "pythonnet", "clr", "clr_loader"] if native_arm else [])
+    + [
         "tkinter",
         "PyQt5",
         "PyQt6",

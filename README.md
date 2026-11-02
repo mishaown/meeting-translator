@@ -22,10 +22,18 @@ when available. The release workflow builds these archives:
 | `meeting-translator-macos-arm64.zip` | Extract and open `MeetingTranslator.app` on Apple Silicon. |
 | `meeting-translator-macos-x64.zip` | Extract and open `MeetingTranslator.app` on Intel Macs. |
 
-The Windows desktop build uses x64 Python and also runs on Windows 11 ARM64 through
-emulation. Native ARM64 desktop packaging is not available yet because the current
-window-host dependency is incompatible with the native ARM64 .NET host. For native ARM64
-inference and optional Adreno acceleration, use the source/browser instructions below.
+The published **v0.1.0** Windows desktop build uses x64 Python and runs on Windows 11 ARM64
+through emulation. Native ARM64 work is isolated on the `native-windows-arm64` branch.
+That branch uses a small **Win32/WebView2 host**, native ARM64 Python, and native inference
+runtimes, with no Python.NET or .NET window-host dependency. Its packaged interface and
+native runtime startup have passed checks on the development Surface Laptop 7.
+
+Native preview artifacts are built by the
+[Native Windows ARM64 workflow](https://github.com/mishaown/meeting-translator/actions/workflows/windows-arm64.yml).
+The native preview bundles CPU runtimes and optional Adreno OpenCL runtimes; Automatic can
+fall back to CPU. Model weights still download separately. Recordings and models use the
+same user-data location as the x64 app; close one app before using the other. Long meetings,
+real capture permissions and GPU behavior still need preview testing.
 
 **On first launch:** click **Download models**, choose Balanced or Lightweight, and wait
 for verification to finish. Lightweight uses Whisper tiny and direct audio translation;

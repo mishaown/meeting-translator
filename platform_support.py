@@ -2,6 +2,7 @@
 
 import platform
 import sysconfig
+from pathlib import Path
 
 
 def target_platform(system=None, machine=None):
@@ -23,3 +24,17 @@ def target_platform(system=None, machine=None):
             "Supported platforms: Windows ARM64/x64 and macOS Apple Silicon/Intel. Use native 64-bit Python."
         )
     return ("windows" if system == "Windows" else "macos") + "-" + architecture
+
+
+def require_arm64_binary(path):
+    """Reject an accidental x64 executable or DLL in a native Windows ARM64 build."""
+    path = Path(path)
+    with path.open("rb") as stream:
+        if stream.read(2) != b"MZ":
+            raise RuntimeError(f"Not a Windows binary: {path.name}")
+        stream.seek(0x3C)
+        offset = int.from_bytes(stream.read(4), "little")
+        stream.seek(offset)
+        header = stream.read(6)
+    if header != b"PE\0\0\x64\xaa":
+        raise RuntimeError(f"Native ARM64 binary required: {path.name}")

@@ -18,7 +18,7 @@ from capture import capture_command
 from engine import ROOT, RATE, Whisper
 from meeting import SHANGHAI, Segmenter, load_audio
 from translator import TextTranslator
-from model_catalog import model_path
+from model_catalog import model_path, catalog
 
 DONE = {"complete", "error", "cancelled"}
 
@@ -678,6 +678,25 @@ class Application:
             "translation": True,
             "diarization": (ROOT / "models/speakers/embedding.onnx").is_file(),
         }
+        installed = catalog()
+        speech = [
+            item["id"] for item in installed["transcription"] if item["installed"]
+        ]
+        text = [
+            item["id"]
+            for item in installed["translation"]
+            if item["installed"] and item["id"] != "whisper"
+        ]
+        if speech:
+            self.defaults["model"] = "base" if "base" in speech else speech[0]
+            if text:
+                self.defaults["translation_model"] = (
+                    "qwen25-1.5b" if "qwen25-1.5b" in text else text[0]
+                )
+            elif self.defaults["model"] != "turbo":
+                self.defaults["translation_model"] = "whisper"
+            else:
+                self.defaults["translation"] = False
 
     def settings(self, options):
         settings = dict(self.defaults)
