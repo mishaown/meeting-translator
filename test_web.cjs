@@ -6,7 +6,7 @@ const html=fs.readFileSync('web/index.html','utf8');
 const dom=new JSDOM(html,{runScripts:'outside-only',pretendToBeVisual:true,url:'http://127.0.0.1:8765'});
 const w=dom.window, d=w.document;
 const $=id=>d.getElementById(id);
-const settings={source:'mic',model:'base',translation_model:'qwen25-1.5b',device:'auto',transcription:true,translation:true,diarization:true};
+const settings={source:'mic',model:'base',translation_model:'qwen25-1.5b',device:'auto',transcription:true,translation:true,diarization:false};
 let job=null, setupRequest=null;
 let setupState={state:'idle',message:'Choose models',data_directory:'test-data',error:null};
 const recording={id:'test_meeting',title:'Test meeting',source:'mic',created_at:'2026-10-28T16:00:00+08:00',duration:5,tracks:['mixed'],speakers:{},rows:[{id:'r1',start:2,end:4,speaker:'speaker_1',chinese:'大家好 <script>unsafe</script>',english:'Hello everyone.',status:'ready'}]};
@@ -39,7 +39,7 @@ const tick=()=>new Promise(resolve=>setTimeout(resolve,40));
 async function click(id){$(id).click();await tick();}
 (async()=>{
   w.eval(fs.readFileSync('web/app.js','utf8'));await tick();
-  assert.equal(d.querySelector('[data-source=mic]').getAttribute('aria-pressed'),'true');
+  assert.equal(d.querySelector('[data-source=mic]').getAttribute('aria-pressed'),'true');assert.equal($('toggle-diarization').checked,false);
   d.querySelector('[data-source=both]').click();assert.equal(d.querySelector('[data-source=both]').getAttribute('aria-pressed'),'true');
   d.querySelector('[data-source=mic]').click();$('meeting-title').value='A real meeting';await click('start');
   assert.equal(job.options.source,'mic');assert.equal($('pause').disabled,false);assert.equal($('start').disabled,true);

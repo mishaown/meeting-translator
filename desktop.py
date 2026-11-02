@@ -127,7 +127,10 @@ def main():
             watchdog = threading.Timer(40, window.destroy)
             watchdog.daemon = True
             watchdog.start()
-        webview.start(gui="edgechromium" if sys.platform == "win32" else "cocoa")
+        webview.start(
+            gui="edgechromium" if sys.platform == "win32" else "cocoa",
+            storage_path=str(DATA_ROOT / "webview"),
+        )
         return 0 if not args.smoke_test or result["window_loaded"] else 1
     finally:
         if watchdog:

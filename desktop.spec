@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import sys
+from importlib.metadata import distributions
 
 from PyInstaller.utils.hooks import collect_all
 
@@ -11,6 +12,36 @@ datas += [
     (str(root / name), ".")
     for name in ("Capture.cs", "capture.ps1", "LICENSE", "THIRD_PARTY.md")
 ]
+runtime_packages = {
+    "numpy",
+    "sherpa-onnx",
+    "sherpa-onnx-core",
+    "pywebview",
+    "pythonnet",
+    "clr-loader",
+    "cffi",
+    "pycparser",
+    "proxy-tools",
+    "bottle",
+    "typing-extensions",
+    "sounddevice",
+    "pyinstaller",
+}
+for distribution in distributions():
+    name = distribution.metadata["Name"].lower().replace("_", "-")
+    if name not in runtime_packages and not name.startswith("pyobjc"):
+        continue
+    for entry in distribution.files or []:
+        if (
+            entry.name.lower().startswith(("license", "copying", "notice"))
+            and distribution.locate_file(entry).is_file()
+        ):
+            datas.append(
+                (
+                    str(distribution.locate_file(entry)),
+                    str(Path("third-party-licenses") / name / entry.parent.name),
+                )
+            )
 folders = (
     (
         "whisper",
