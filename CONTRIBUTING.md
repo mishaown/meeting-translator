@@ -104,8 +104,9 @@ and strict GPU behavior distinct, and preserve the legacy Windows ARM64 runtime 
 ## Desktop builds and releases
 
 Build on Windows x64, Apple Silicon, or Intel macOS with a matching Python 3.13 interpreter.
-Windows desktop builds require x64 Python, including when building on Windows ARM64. Keep
-source/browser ARM64 support distinct from the x64 desktop release's emulation path.
+The published v0.1.0 Windows desktop build uses x64 Python. The `native-windows-arm64`
+branch adds a separate native host and a Windows ARM64 build; keep its preview status
+distinct from the published x64 release's emulation path.
 
 ```powershell
 python -m pip install -r requirements-desktop.txt
@@ -129,3 +130,26 @@ It uploads ZIPs and SHA-256 files. Once every build passes, it creates a **draft
 for review. Check a native window, microphone/loopback permissions, stop/close behavior,
 exports and model installation before publishing the draft. Current packages have no
 Windows signing certificate or Apple Developer ID/notarization credentials configured.
+
+### Native Windows ARM64 development
+
+Use native ARM64 Python 3.13, CMake, and Visual Studio C++ build tools with the ARM64
+compiler and Windows SDK. The dedicated GitHub workflow supplies these on `windows-11-arm`.
+
+```powershell
+python -m pip install -r requirements.txt pyinstaller==6.22.3
+python setup_models.py --runtimes-only --acceleration
+python setup_windows_host.py
+python build_desktop.py
+```
+
+`setup_windows_host.py` verifies a pinned Microsoft WebView2 NuGet SDK, then compiles
+`native/windows/host.cpp`. The small host uses the system ARM64 WebView2 Runtime and
+keeps its SDK redistributable license beside its loader. It embeds the existing loopback
+interface and watches the backend process so its window closes if the backend exits.
+The Python backend still owns capture, model setup, inference and saving recordings.
+
+The ARM64 bundle excludes pywebview/Python.NET, preserves the same native WASAPI capture
+helper, and checks PE machine types for the frontend, host, loader and model servers.
+`--smoke-test` additionally loads the interface in a hidden native window. Passing startup
+checks does not replace real microphone/system capture and long-meeting validation.
