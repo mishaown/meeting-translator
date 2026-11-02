@@ -1,0 +1,9 @@
+{
+  "name": "meeting-translator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Development-only browser tests; no Node.js runtime dependency",
+  "scripts": {"test": "node test_web.cjs"},
+  "devDependencies": {"jsdom": "30.1.3"},
+  "engines": {"node": ">=22"}
+}

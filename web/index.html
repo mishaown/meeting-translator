@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Meeting desk · Local recorder</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="Meeting desk home"><img src="/favicon.svg" alt=""><span>meeting<span class="brand-light">desk</span><small>A little clarity, locally.</small></span></a>
+    <button id="new-meeting" class="new-meeting"><span data-icon="plus"></span> New recording</button>
+    <button id="return-live" class="return-live hidden"><span class="status-dot"></span> Return to current session <span>↗</span></button>
+    <div class="library-heading"><h2>YOUR RECORDINGS</h2><span id="library-count" class="count">0</span></div>
+    <label class="search"><span data-icon="search"></span><input id="search" type="search" placeholder="Find a recording…" aria-label="Search recordings"></label>
+    <div id="recording-list" class="recording-list"><p class="library-empty">Your recordings will appear here.</p></div>
+    <div class="sidebar-footer"><span data-icon="shield"></span><div>Made to stay with you.<small>Audio and models run on this computer.</small></div></div>
+  </aside>
+
+  <main>
+    <header class="topbar"><div class="breadcrumb"><span data-icon="grid"></span><span id="breadcrumb">Workspace / New recording</span></div><span id="connection" class="local-badge"><span></span> On this computer</span></header>
+    <div class="workspace">
+      <section id="live-view">
+        <div class="page-heading"><div><div class="eyebrow">YOUR MEETING SPACE</div><h1>Focus on the conversation.</h1><p>Record it. Read it. Understand it in another language.</p></div><span class="language-badge"><span data-icon="languages"></span> 中文 <span class="muted-arrow">→</span> English</span></div>
+        <section class="capture-card" aria-label="Recording controls">
+          <div class="capture-title-row"><label class="title-field"><span>Meeting name</span><input id="meeting-title" maxlength="120" placeholder="Untitled meeting" aria-label="Meeting name"></label><span id="record-state" class="state-pill"><span></span> Ready to record</span></div>
+          <div class="source-heading"><label>Audio source</label><span>Choose what you want to capture</span></div>
+          <div class="source-selector" role="group" aria-label="Audio source">
+            <button class="source-option selected" data-source="mic" aria-pressed="true"><span data-icon="mic"></span><span>Microphone<small>In-person conversations</small></span><i></i></button>
+            <button class="source-option" data-source="system" aria-pressed="false"><span data-icon="monitor"></span><span>Computer audio<small>Calls and presentations</small></span><i></i></button>
+            <button class="source-option" data-source="both" aria-pressed="false"><span data-icon="both"></span><span>Both sources<small>Your voice and the call</small></span><i></i></button>
+          </div>
+          <div class="recording-strip"><div class="time-block"><span class="small-label">RECORDING TIME</span><div id="timer" class="timer">00:00:00</div></div><div id="level-meter" class="wave-wrap" role="meter" aria-label="Audio input level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><canvas id="waveform" aria-hidden="true"></canvas><span id="wave-caption">Your audio will appear here</span></div><div class="record-buttons"><button id="start" class="button primary"><span data-icon="record"></span> Start recording</button><button id="pause" class="button secondary" disabled><span data-icon="pause"></span> Pause</button><button id="stop" class="button stop" disabled><span data-icon="stop"></span> Stop</button></div></div>
+          <div class="capture-footer"><span id="capture-message"><span class="tiny-dot"></span> Ready when you are. Microphone is selected.</span></div>
+        </section>
+
+        <div class="feed-heading"><div><h2>Live conversation <span id="live-pill" class="live-pill hidden">LIVE</span></h2><p>Chinese speech, with an English translation alongside.</p></div><span id="queue-status" class="queue-status"></span></div>
+        <div class="feed-options" aria-label="Live processing options">
+          <label class="switch-option"><input id="toggle-transcription" type="checkbox" checked><span class="switch"></span><span>Transcription <small>中文</small></span></label>
+          <label class="switch-option"><input id="toggle-translation" type="checkbox" checked><span class="switch"></span><span>Translation <small>EN</small></span></label>
+          <label class="switch-option speaker-switch"><input id="toggle-diarization" type="checkbox" checked><span class="switch"></span><span>Identify speakers</span></label>
+        </div>
+        <p id="processing-note" class="processing-note hidden"></p>
+      </section>
+
+      <section id="saved-view" class="hidden">
+        <div class="page-heading saved-heading"><div><div class="eyebrow">RECORDING LIBRARY</div><h1 id="saved-title">Your recording</h1><p id="saved-meta"></p></div><button id="rename" class="button secondary"><span data-icon="edit"></span> Rename</button></div>
+        <section class="playback-card"><div class="playback-top"><span class="audio-file-icon" data-icon="audio"></span><div><h2>Listen back</h2><p>Your original recording, ready to revisit.</p></div><select id="audio-track" aria-label="Playback audio track"></select></div><audio id="player" controls preload="metadata">Your browser does not support audio playback.</audio></section>
+        <div class="feed-heading saved-feed-heading"><div><h2>Transcript & translation</h2><p>Choose a timestamp to listen from that moment.</p></div><div class="saved-actions"><button id="cancel-processing" class="button stop hidden">Cancel processing</button><button id="generate" class="button secondary"><span data-icon="sparkles"></span> Generate text</button><a id="export" class="button secondary" href="#"><span data-icon="download"></span> Export text</a></div></div>
+        <div class="review-options"><label><input id="show-chinese" type="checkbox" checked> Chinese</label><label><input id="show-english" type="checkbox" checked> English</label><span id="saved-status"></span></div>
+        <div class="result-options"><label>Saved result <select id="result-run" aria-label="Saved result version"></select></label><label>Compare with <select id="compare-run" aria-label="Compare another result"><option value="">No comparison</option></select></label></div>
+      </section>
+
+      <section class="model-panel" aria-label="Model selection">
+        <div class="model-selectors"><label>Transcription model<select id="model" aria-label="Transcription model"><option value="base">Whisper base</option></select></label><label>Translation model<select id="translation-model" aria-label="Translation model"><option value="qwen25-1.5b">Qwen2.5 1.5B</option></select></label><label>Processing device<select id="device" aria-label="Processing device"><option value="auto">Automatic · GPU when supported</option><option value="cpu">CPU</option><option value="gpu">GPU · strict</option></select></label></div>
+        <p id="model-note">Model changes apply at the next utterance during recording, or when you generate a new saved result.</p>
+        <p id="device-status" role="status">Actual processing devices appear when captions start. NPU runtime is not configured.</p>
+      </section>
+      <section id="comparison" class="comparison hidden" aria-label="Model result comparison"></section>
+      <section id="conversation" class="conversation-panel" aria-label="Transcript and translation">
+        <div class="conversation-header"><div><span class="column-label">ORIGINAL TRANSCRIPT <span>中文</span></span><span class="column-label">ENGLISH TRANSLATION <span>EN</span></span></div><button id="manage-speakers" class="text-button"><span data-icon="users"></span> Speakers</button></div>
+        <div id="empty-state" class="empty-state"><div class="empty-icon"><span data-icon="conversation"></span><i></i></div><h3>A space for every word.</h3><p>Start a recording and your conversation will appear here.<br>Speaker labels help you follow who said what.</p><span class="empty-note"><span data-icon="lock"></span> Processed locally, saved on your computer</span></div>
+        <div id="caption-feed" class="caption-feed hidden" aria-live="polite" aria-relevant="additions text"></div>
+      </section>
+      <footer class="workspace-footer"><span><span data-icon="info"></span> Automatic text and speaker labels may need corrections.</span><span id="session-note">Chinese → English · Local processing</span></footer>
+    </div>
+  </main>
+</div>
+
+<dialog id="speakers-dialog"><form id="speakers-form"><div class="dialog-heading"><div><h2>People in this conversation</h2><p>Rename speakers or add your own labels.</p></div><button type="button" class="icon-button close-dialog" aria-label="Close speaker editor">×</button></div><p class="dialog-note">Automatic speaker IDs are estimates. Names and gender labels are entered by you.</p><div id="speaker-fields"></div><button type="button" id="add-speaker" class="text-button"><span data-icon="plus"></span> Add a speaker</button><div class="dialog-actions"><button type="button" class="button secondary close-dialog">Cancel</button><button type="submit" class="button primary">Save speakers</button></div></form></dialog>
+<dialog id="rename-dialog"><form id="rename-form"><div class="dialog-heading"><h2>Name this recording</h2><button type="button" class="icon-button close-dialog" aria-label="Close rename dialog">×</button></div><label class="dialog-label">Recording name<input id="rename-input" maxlength="120" required></label><div class="dialog-actions"><button type="button" class="button secondary close-dialog">Cancel</button><button class="button primary" type="submit">Save name</button></div></form></dialog>
+<dialog id="process-dialog"><form id="process-form"><div class="dialog-heading"><h2>Generate a new result?</h2><button type="button" class="icon-button close-dialog" aria-label="Close processing dialog">×</button></div><p id="process-models"></p><p>The selected models will process this recording. Previous results and their speaker labels stay in Saved result so you can compare the same audio. Larger models may take longer than the recording.</p><div class="dialog-actions"><button type="button" class="button secondary close-dialog">Cancel</button><button class="button primary" type="submit">Generate text</button></div></form></dialog>
+<div id="toast" role="status" class="toast hidden"></div>
+</body></html>

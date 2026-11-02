@@ -1,0 +1,35 @@
+# Local environments and generated dependencies
+.venv/
+venv/
+node_modules/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Downloaded weights, native binaries, archives and private recordings
+models/
+runtime/
+downloads/
+sessions/
+reports/
+fixtures/*.wav
+*.part
+*.log
+*.tmp
+
+# Credentials and machine-local settings
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
