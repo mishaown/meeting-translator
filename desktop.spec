@@ -68,6 +68,7 @@ for folder in folders:
                 "whisper-server",
                 "llama-server",
             )
+            or path.name.upper().startswith(("LICENSE", "COPYING", "NOTICE"))
         ):
             datas.append((str(path), str(path.parent.relative_to(root))))
 
