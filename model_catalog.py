@@ -2,7 +2,8 @@
 
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
+from app_paths import DATA_ROOT as ROOT
+
 TRANSCRIPTION_MODELS = {
     "tiny": {
         "name": "Whisper tiny · fastest",

@@ -14,6 +14,11 @@ These components keep their upstream licenses; this project does not relicense t
 | Qwen3 1.7B Q8_0 | https://huggingface.co/Qwen/Qwen3-1.7B-GGUF | Apache 2.0 |
 | Qwen2.5 1.5B Instruct Q4_K_M | https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF | Apache 2.0 |
 | NumPy | https://numpy.org/ | BSD 3-clause |
+| pywebview (desktop window) | https://github.com/r0x0r/pywebview | BSD 3-clause |
+| Python.NET (Windows desktop) | https://github.com/pythonnet/pythonnet | MIT |
+| PyObjC (macOS desktop) | https://github.com/ronaldoussoren/pyobjc | MIT |
+| PyInstaller (packaging/bootloader) | https://github.com/pyinstaller/pyinstaller | GPL-2.0-or-later with bootloader distribution exception |
+| CPython (bundled desktop interpreter) | https://www.python.org/ | PSF License |
 | python-sounddevice (macOS capture) | https://github.com/spatialaudio/python-sounddevice | MIT |
 | PortAudio (included in macOS sounddevice wheels) | https://www.portaudio.com/ | MIT-style PortAudio license |
 | Sherpa-ONNX 2.0.1 | https://github.com/k2-fsa/sherpa-onnx | Apache 2.0 |

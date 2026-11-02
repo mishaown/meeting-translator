@@ -7,7 +7,8 @@ const dom=new JSDOM(html,{runScripts:'outside-only',pretendToBeVisual:true,url:'
 const w=dom.window, d=w.document;
 const $=id=>d.getElementById(id);
 const settings={source:'mic',model:'base',translation_model:'qwen25-1.5b',device:'auto',transcription:true,translation:true,diarization:true};
-let job=null;
+let job=null, setupRequest=null;
+let setupState={state:'idle',message:'Choose models',data_directory:'test-data',error:null};
 const recording={id:'test_meeting',title:'Test meeting',source:'mic',created_at:'2026-10-28T16:00:00+08:00',duration:5,tracks:['mixed'],speakers:{},rows:[{id:'r1',start:2,end:4,speaker:'speaker_1',chinese:'大家好 <script>unsafe</script>',english:'Hello everyone.',status:'ready'}]};
 recording.active_run='aaaaaaaaaaaa';
 recording.runs=[{id:'aaaaaaaaaaaa',active:true,options:settings,caption_count:1,created_at:recording.created_at,elapsed_seconds:2},{id:'bbbbbbbbbbbb',active:false,options:{model:'tiny',translation_model:'whisper'},caption_count:1,created_at:recording.created_at,elapsed_seconds:1}];
@@ -17,6 +18,7 @@ w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');
 w.fetch=async (url,options={})=>{const body=JSON.parse(options.body||'{}');let data;
   if(url==='/api/status')data={job,defaults:settings};
   else if(url==='/api/models')data={transcription:[{id:'base',name:'Whisper base',installed:true},{id:'tiny',name:'Whisper tiny',installed:true},{id:'missing',name:'Missing',installed:false}],translation:[{id:'qwen25-1.5b',name:'Qwen2.5 1.5B',installed:true},{id:'whisper',name:'Direct Whisper',installed:true}],devices:[{id:'auto',name:'Automatic'},{id:'cpu',name:'CPU'},{id:'gpu',name:'GPU'}]};
+  else if(url==='/api/setup'){if(options.method==='POST'){setupRequest=body;setupState={...setupState,state:'complete',message:'Models ready'};}data=setupState;}
   else if(url==='/api/sessions')data={sessions:[{...recording,rows:undefined}]};
   else if(url==='/api/start'){job={id:recording.id,state:'recording',mode:'record',message:'Listening',duration:1,level:.1,pending:0,options:{...settings,...body}};data=job;}
   else if(url==='/api/pause'){job.state='paused';data={job};}
@@ -48,13 +50,14 @@ async function click(id){$(id).click();await tick();}
   $('toggle-translation').click();await tick();assert.equal(job.options.translation,false);assert.equal(job.options.transcription,true);assert.equal($('conversation').classList.contains('hide-en'),true);
   $('toggle-transcription').click();await tick();assert.equal(job.options.transcription,false);assert.match($('processing-note').textContent,/Audio will still be recorded/);
   await click('stop');assert.equal($('saved-view').classList.contains('hidden'),false);assert.match($('player').src,/test_meeting\/audio\/mixed$/);
-  assert.equal(d.querySelectorAll('script').length,1);assert.match(d.querySelector('.caption-text.zh').textContent,/<script>unsafe<\/script>/);
+  assert.equal(d.querySelectorAll('script').length,2);assert.match(d.querySelector('.caption-text.zh').textContent,/<script>unsafe<\/script>/);
   d.querySelector('.timestamp').click();assert.equal($('player').currentTime,2);assert.equal($('player').playCalled,true);
   $('show-english').click();assert.equal($('conversation').classList.contains('hide-en'),true);$('show-english').click();
   await click('rename');$('rename-input').value='Research discussion';$('rename-form').dispatchEvent(new w.Event('submit',{cancelable:true}));await tick();assert.equal(recording.title,'Research discussion');assert.equal($('saved-title').textContent,'Research discussion');
   await click('manage-speakers');d.querySelector('.speaker-name').value='王老师';d.querySelector('.speaker-label').value='Female';$('speakers-form').dispatchEvent(new w.Event('submit',{cancelable:true}));await tick();assert.equal(recording.speakers.speaker_1.name,'王老师');assert.equal(recording.speakers.speaker_1.label,'Female');
   $('compare-run').value='bbbbbbbbbbbb';$('compare-run').dispatchEvent(new w.Event('change'));await tick();assert.equal($('comparison').classList.contains('hidden'),false);assert.match($('comparison').textContent,/Alternative model result/);assert.match($('comparison').textContent,/Hello everyone/);
   $('result-run').value='bbbbbbbbbbbb';$('result-run').dispatchEvent(new w.Event('change'));await tick();assert.equal(recording.active_run,'bbbbbbbbbbbb');assert.equal($('comparison').classList.contains('hidden'),true);
-  assert.deepEqual(errors,[]);console.log('PASS: source selection, start/pause/resume/stop, independent live switches, live model changes, installed model choices, saved playback, timestamp seeking, display switches, rename, manual speaker labels, result selection, side-by-side comparison and text escaping.');
+  w.eval(fs.readFileSync('web/setup.js','utf8'));await tick();await click('setup-open');assert.equal($('setup-dialog').open,true);$('setup-profile').value='lightweight';$('setup-profile').dispatchEvent(new w.Event('change'));assert.equal($('setup-speakers').checked,false);await click('setup-download');assert.equal(setupRequest.profile,'lightweight');assert.equal(setupRequest.speakers,false);assert.equal($('setup-use').classList.contains('hidden'),false);await click('setup-close');assert.equal($('setup-dialog').open,false);
+  assert.deepEqual(errors,[]);console.log('PASS: source selection, recording controls, model selection/download setup, saved playback, seeking, speaker labels, comparisons and text escaping.');
   dom.window.close();
 })().catch(error=>{console.error(error);dom.window.close();process.exitCode=1;});

@@ -15,7 +15,8 @@ from concurrent.futures import ThreadPoolExecutor
 from model_catalog import TRANSCRIPTION_MODELS, TRANSLATION_MODELS
 from platform_support import target_platform
 
-ROOT = Path(__file__).resolve().parent
+from app_paths import DATA_ROOT as ROOT
+
 ARTIFACTS = {
     "whisper-opencl": (
         "https://github.com/ggml-org/whisper.cpp/releases/download/b5454/whisper-bin-win-opencl-adreno-arm64.zip",

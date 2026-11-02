@@ -9,8 +9,25 @@ import subprocess
 import time
 import urllib.request
 from platform_support import target_platform
+from app_paths import ASSET_ROOT
 
-ROOT = Path(__file__).resolve().parent
+from app_paths import DATA_ROOT as ROOT
+
+
+def runtime_roots():
+    return list(dict.fromkeys((ROOT / "runtime", ASSET_ROOT / "runtime")))
+
+
+def find_runtime(folder, name):
+    return next(
+        (
+            path
+            for root in runtime_roots()
+            for path in (root / folder).rglob(name)
+            if path.is_file()
+        ),
+        None,
+    )
 
 
 def candidates(task, requested):
@@ -23,7 +40,7 @@ def candidates(task, requested):
             if task == "transcription"
             else ("llama", "llama-server")
         )
-        executable = next((ROOT / "runtime" / folder).rglob(name), None)
+        executable = find_runtime(folder, name)
         if executable:
             return [
                 (executable, backend)
@@ -44,7 +61,7 @@ def candidates(task, requested):
     result = []
     if requested != "cpu" and target == "windows-arm64":
         for folder, name, backend in layouts:
-            executable = next((ROOT / "runtime" / folder).rglob(name), None)
+            executable = find_runtime(folder, name)
             if executable:
                 result.append((executable, backend))
     if requested != "gpu":
@@ -53,10 +70,9 @@ def candidates(task, requested):
             if task == "transcription"
             else ("llama", "llama-server.exe")
         )
-        cpu = next((ROOT / "runtime" / folder).rglob(name), None)
+        cpu = find_runtime(folder, name)
         if cpu is None and task == "transcription":
-            legacy = ROOT / "runtime/Release/whisper-server.exe"
-            cpu = legacy if legacy.is_file() else None
+            cpu = find_runtime("Release", "whisper-server.exe")
         if cpu is not None:
             result.append((cpu, "cpu"))
     if not result:

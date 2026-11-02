@@ -18,6 +18,7 @@ runtime/
 downloads/
 sessions/
 reports/
+logs/
 fixtures/*.wav
 *.part
 *.log

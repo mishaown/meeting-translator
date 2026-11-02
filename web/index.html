@@ -6,12 +6,14 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/style.css">
   <script src="/app.js" defer></script>
+  <script src="/setup.js" defer></script>
 </head>
 <body>
 <div class="app-shell">
   <aside class="sidebar">
     <a class="brand" href="/" aria-label="Meeting desk home"><img src="/favicon.svg" alt=""><span>meeting<span class="brand-light">desk</span><small>A little clarity, locally.</small></span></a>
     <button id="new-meeting" class="new-meeting"><span data-icon="plus"></span> New recording</button>
+    <button id="setup-open" class="text-button"><span data-icon="download"></span> Download models</button>
     <button id="return-live" class="return-live hidden"><span class="status-dot"></span> Return to current session <span>↗</span></button>
     <div class="library-heading"><h2>YOUR RECORDINGS</h2><span id="library-count" class="count">0</span></div>
     <label class="search"><span data-icon="search"></span><input id="search" type="search" placeholder="Find a recording…" aria-label="Search recordings"></label>
@@ -72,5 +74,14 @@
 <dialog id="speakers-dialog"><form id="speakers-form"><div class="dialog-heading"><div><h2>People in this conversation</h2><p>Rename speakers or add your own labels.</p></div><button type="button" class="icon-button close-dialog" aria-label="Close speaker editor">×</button></div><p class="dialog-note">Automatic speaker IDs are estimates. Names and gender labels are entered by you.</p><div id="speaker-fields"></div><button type="button" id="add-speaker" class="text-button"><span data-icon="plus"></span> Add a speaker</button><div class="dialog-actions"><button type="button" class="button secondary close-dialog">Cancel</button><button type="submit" class="button primary">Save speakers</button></div></form></dialog>
 <dialog id="rename-dialog"><form id="rename-form"><div class="dialog-heading"><h2>Name this recording</h2><button type="button" class="icon-button close-dialog" aria-label="Close rename dialog">×</button></div><label class="dialog-label">Recording name<input id="rename-input" maxlength="120" required></label><div class="dialog-actions"><button type="button" class="button secondary close-dialog">Cancel</button><button class="button primary" type="submit">Save name</button></div></form></dialog>
 <dialog id="process-dialog"><form id="process-form"><div class="dialog-heading"><h2>Generate a new result?</h2><button type="button" class="icon-button close-dialog" aria-label="Close processing dialog">×</button></div><p id="process-models"></p><p>The selected models will process this recording. Previous results and their speaker labels stay in Saved result so you can compare the same audio. Larger models may take longer than the recording.</p><div class="dialog-actions"><button type="button" class="button secondary close-dialog">Cancel</button><button class="button primary" type="submit">Generate text</button></div></form></dialog>
+<dialog id="setup-dialog" aria-labelledby="setup-title">
+  <div class="dialog-heading"><div><h2 id="setup-title">Ready for your first meeting?</h2><p>Download models once, then work offline.</p></div><button id="setup-close" class="icon-button" aria-label="Close model setup">&times;</button></div>
+  <label class="dialog-label">Model profile<select id="setup-profile"><option value="default">Balanced: Whisper base + Qwen2.5 (about 1.2 GB)</option><option value="lightweight">Lightweight: Whisper tiny, direct translation (about 32 MB)</option></select></label>
+  <label class="setup-option"><input id="setup-speakers" type="checkbox" checked> Download optional speaker-label models (additional download)</label>
+  <details><summary>Additional models</summary><div id="setup-extras" class="setup-extras"></div></details>
+  <p>Models download from their upstream GitHub and Hugging Face sources and are verified before use. Keep the app open until setup finishes. Interrupted downloads can be retried.</p>
+  <p id="setup-status" role="status">Choose a profile to begin.</p><p id="setup-data" class="dialog-note"></p>
+  <div class="dialog-actions"><button id="setup-download" class="button primary">Download selected models</button><button id="setup-use" class="button secondary hidden">Open recorder</button></div>
+</dialog>
 <div id="toast" role="status" class="toast hidden"></div>
 </body></html>

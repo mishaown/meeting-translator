@@ -12,3 +12,5 @@
 .comparison h3{font-size:13px;margin:0 0 8px}.comparison-meta{font-size:10px;color:#7d8e80;overflow-wrap:anywhere;line-height:1.6}
 .comparison-rows{max-height:420px;overflow:auto}.comparison-row{border-top:1px solid #edf1ed;padding:10px 0}.comparison-row small{color:#8d9f92;font-size:10px}.comparison-row p{font-size:12px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere;margin:7px 0}
 @media(max-width:850px){.model-selectors{grid-template-columns:1fr}.result-options{grid-template-columns:1fr}.comparison{grid-template-columns:1fr}.model-panel{padding:15px}}
+
+.setup-option{display:flex;align-items:center;gap:8px;margin:12px 0}.setup-extras{max-height:180px;overflow:auto}#setup-dialog{max-width:650px}#setup-status{white-space:pre-wrap;overflow-wrap:anywhere}#setup-open{margin:0 20px 18px}

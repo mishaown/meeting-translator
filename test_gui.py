@@ -107,6 +107,16 @@ class BrowserApiTests(unittest.TestCase):
         with self.assertRaises(OSError):
             LocalServer(("127.0.0.1", self.server.server_port), self.app)
 
+    def test_model_setup_reuses_origin_checks_and_rejects_unknown_ids(self):
+        with self.request("/api/setup") as response:
+            self.assertEqual(json.load(response)["state"], "idle")
+        with self.assertRaises(urllib.error.HTTPError) as error:
+            self.request("/api/setup", {"models": ["../../model"]})
+        self.assertEqual(error.exception.code, 400)
+        with self.assertRaises(urllib.error.HTTPError) as error:
+            self.request("/api/setup", {}, {"Origin": "https://example.org"})
+        self.assertEqual(error.exception.code, 403)
+
     def test_models_and_saved_versions_api(self):
         with self.request("/api/models") as response:
             models = json.load(response)

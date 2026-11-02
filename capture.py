@@ -12,7 +12,8 @@ import wave
 
 from platform_support import target_platform
 
-ROOT = Path(__file__).resolve().parent
+from app_paths import ASSET_ROOT as ROOT
+
 RATE = 16000
 
 
@@ -42,7 +43,11 @@ def capture_command(
                 str(parent_id),
             ]
         )
-    command = [sys.executable, str(ROOT / "capture.py")]
+    command = (
+        [sys.executable, "--capture-worker"]
+        if getattr(sys, "frozen", False)
+        else [sys.executable, str(ROOT / "capture.py")]
+    )
     if not list_devices:
         selected_devices(source)
     return command + (

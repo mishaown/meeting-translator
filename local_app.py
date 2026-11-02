@@ -13,8 +13,10 @@ import urllib.request
 from urllib.parse import unquote, urlparse
 import webbrowser
 
+from app_paths import ASSET_ROOT
 from engine import ROOT
 from gui_runtime import Application
+from model_setup import ModelSetup
 
 
 class LocalServer(ThreadingHTTPServer):
@@ -30,6 +32,7 @@ class LocalServer(ThreadingHTTPServer):
     def __init__(self, address, app=None):
         super().__init__(address, Handler)
         self.app = app or Application()
+        self.setup = ModelSetup(self.app)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -84,6 +87,8 @@ class Handler(BaseHTTPRequestHandler):
             app = self.server.app
             if path == "/api/status":
                 return self.json(app.status())
+            if path == "/api/setup":
+                return self.json(self.server.setup.snapshot())
             if path == "/api/models":
                 from model_catalog import catalog
 
@@ -130,9 +135,10 @@ class Handler(BaseHTTPRequestHandler):
                 "/app.js": "app.js",
                 "/style.css": "style.css",
                 "/favicon.svg": "favicon.svg",
+                "/setup.js": "setup.js",
             }
             if path in files:
-                file = ROOT / "web" / files[path]
+                file = ASSET_ROOT / "web" / files[path]
                 return self.send_bytes(
                     file.read_bytes(),
                     mimetypes.guess_type(file.name)[0] or "application/octet-stream",
@@ -196,8 +202,15 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError("Expected a settings object")
             path = unquote(urlparse(self.path).path)
             app = self.server.app
+            if path == "/api/setup":
+                return self.json(self.server.setup.start(body))
             if path == "/api/start":
-                return self.json(app.start(body))
+                with app.lock:
+                    if self.server.setup.snapshot()["state"] == "running":
+                        raise ValueError(
+                            "Wait for model setup to finish before recording."
+                        )
+                    return self.json(app.start(body))
             if path in ("/api/pause", "/api/resume", "/api/stop", "/api/options"):
                 return self.json(app.control(path.rsplit("/", 1)[1], body))
             match = re.fullmatch(
@@ -208,7 +221,12 @@ class Handler(BaseHTTPRequestHandler):
                 identity, action = match.groups()
                 app.store.path(identity)
                 if action == "process":
-                    return self.json(app.process(identity, body))
+                    with app.lock:
+                        if self.server.setup.snapshot()["state"] == "running":
+                            raise ValueError(
+                                "Wait for model setup to finish before processing."
+                            )
+                        return self.json(app.process(identity, body))
                 if action == "select-run":
                     return self.json(
                         app.select_run(identity, str(body.get("run_id", "")))

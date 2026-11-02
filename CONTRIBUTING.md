@@ -10,6 +10,8 @@ Never attach private recordings, transcripts, credentials or full machine diagno
 | File | Responsibility |
 | --- | --- |
 | `local_app.py` | Loopback HTTP server, request checks, static assets and audio ranges |
+| `desktop.py` / `app_paths.py` | Native window, frozen worker dispatch and writable user-data paths |
+| `model_setup.py` | Serialized, user-initiated model downloads for browser and desktop |
 | `gui_runtime.py` | Recording jobs, persistence, saved runs and caption orchestration |
 | `meeting.py` | CLI, WAV conversion, segmentation and capture coordination |
 | `engine.py` / `translator.py` | Speech and text inference clients |
@@ -98,3 +100,32 @@ fake devices, then validate on real hardware before claiming end-to-end support.
 
 Runtime selection follows the interpreter architecture. Pin new archive hashes, keep CPU
 and strict GPU behavior distinct, and preserve the legacy Windows ARM64 runtime layout.
+
+## Desktop builds and releases
+
+Build on Windows x64, Apple Silicon, or Intel macOS with a matching Python 3.13 interpreter.
+Windows desktop builds require x64 Python, including when building on Windows ARM64. Keep
+source/browser ARM64 support distinct from the x64 desktop release's emulation path.
+
+```powershell
+python -m pip install -r requirements-desktop.txt
+python setup_models.py --runtimes-only
+python build_desktop.py
+```
+
+`desktop.spec` bundles editable web assets, Python dependencies, capture helpers and only
+the native servers/libraries needed at runtime. It excludes model weights, recordings,
+downloads and native build intermediates. Builds are directories/app bundles rather than
+single-file self-extractors, to avoid unpacking native libraries on every launch.
+
+`build_desktop.py` checks bundled imports, resources, the local HTTP server and native
+server startup without opening an audio device or downloading weights. For a native-window
+load check, run the resulting executable with `--smoke-test --data-dir <temporary-folder>`.
+That check loads the interface and exits automatically without recording. On Mac, start
+the executable inside `MeetingTranslator.app/Contents/MacOS` for command-line checks.
+
+Run the **Desktop release** workflow in GitHub Actions to build all three architectures.
+It uploads ZIPs and SHA-256 files. Once every build passes, it creates a **draft prerelease**
+for review. Check a native window, microphone/loopback permissions, stop/close behavior,
+exports and model installation before publishing the draft. Current packages have no
+Windows signing certificate or Apple Developer ID/notarization credentials configured.

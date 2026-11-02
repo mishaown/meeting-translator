@@ -7,6 +7,49 @@ computer audio, or both; pause and resume; revisit recordings; compare model res
 and correct speaker labels. Audio and inference stay on your computer after setup.
 No cloud API, account, frontend build step, or Node.js installation is needed to use the app.
 
+## 🖥️ Desktop app previews
+
+Desktop builds open in their own native window. A local web renderer displays the same
+interface, so the desktop and browser versions share features and fixes. You do not need
+Python installed to run a packaged desktop app.
+
+Download previews from [GitHub Releases](https://github.com/mishaown/meeting-translator/releases)
+when available. The release workflow builds these archives:
+
+| Download | How to run |
+| --- | --- |
+| `meeting-translator-windows-x64.zip` | Extract the entire folder, then run `MeetingTranslator.exe`. Keep `_internal` beside it. |
+| `meeting-translator-macos-arm64.zip` | Extract and open `MeetingTranslator.app` on Apple Silicon. |
+| `meeting-translator-macos-x64.zip` | Extract and open `MeetingTranslator.app` on Intel Macs. |
+
+The Windows desktop build uses x64 Python and also runs on Windows 11 ARM64 through
+emulation. Native ARM64 desktop packaging is not available yet because the current
+window-host dependency is incompatible with the native ARM64 .NET host. For native ARM64
+inference and optional Adreno acceleration, use the source/browser instructions below.
+
+**On first launch:** click **Download models**, choose Balanced or Lightweight, and wait
+for verification to finish. Lightweight uses Whisper tiny and direct audio translation;
+Balanced adds Qwen2.5. Speaker models and additional models are optional. Click **Open
+recorder** when setup completes. Model weights are excluded from app downloads. Native
+CPU runtimes are bundled, so desktop users do not need CMake or a compiler. Mac builds
+also include Metal support.
+
+Desktop models, recordings and logs are stored separately from the application:
+
+- Windows: `%LOCALAPPDATA%\MeetingTranslator`
+- macOS: `~/Library/Application Support/MeetingTranslator`
+
+Keep that folder when replacing the application with a new version. `MEETING_DATA_DIR`
+or the desktop `--data-dir` argument can override it. Closing the desktop window stops
+the server and saves an active recording; closing a browser tab does not.
+
+Preview builds are **unsigned**, and Mac apps are not notarized. Windows needs
+[Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/),
+normally present on Windows 11. macOS may require approving the app under **Privacy &
+Security → Open Anyway**. Microphone permissions and Mac loopback routing still apply.
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for local builds and release automation.
+
 > **Status:** early working prototype. Windows ARM64 has end-to-end development testing.
 > Windows x64 runtimes and macOS adapters have separate validation notes below.
 > Model weights and native executables are downloaded separately and are never part of this repository.

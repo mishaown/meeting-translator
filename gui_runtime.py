@@ -676,7 +676,7 @@ class Application:
             "device": "auto",
             "transcription": True,
             "translation": True,
-            "diarization": True,
+            "diarization": (ROOT / "models/speakers/embedding.onnx").is_file(),
         }
 
     def settings(self, options):

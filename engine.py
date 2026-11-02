@@ -12,7 +12,8 @@ import numpy as np
 from inference_runtime import NativeServer, initialize
 from model_catalog import model_path
 
-ROOT = Path(__file__).resolve().parent
+from app_paths import DATA_ROOT as ROOT
+
 RATE = 16000
 
 
