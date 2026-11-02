@@ -136,6 +136,7 @@ def build_mac_whisper():
             "-B",
             str(build),
             "-DCMAKE_BUILD_TYPE=Release",
+            "-DCMAKE_OSX_DEPLOYMENT_TARGET=14.0",
             f"-DCMAKE_OSX_ARCHITECTURES={architecture}",
             "-DWHISPER_BUILD_TESTS=OFF",
             "-DWHISPER_BUILD_SERVER=ON",

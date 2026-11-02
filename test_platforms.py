@@ -64,6 +64,9 @@ class PlatformTests(unittest.TestCase):
                     f"-DCMAKE_OSX_ARCHITECTURES={architecture}",
                     run.call_args_list[0].args[0],
                 )
+                self.assertIn(
+                    "-DCMAKE_OSX_DEPLOYMENT_TARGET=14.0", run.call_args_list[0].args[0]
+                )
                 self.assertEqual(run.call_args_list[1].args[0][-2:], ["-j", "2"])
 
     def test_native_runtime_lookup_and_gpu_policy(self):
