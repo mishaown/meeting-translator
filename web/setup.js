@@ -5,6 +5,14 @@
   let running = false;
   let refreshTimer;
 
+  async function request(body) {
+    const options = body === undefined ? {} : {method:'POST', headers:{'Content-Type':'application/json', 'X-Local-App':'1'}, body:JSON.stringify(body)};
+    const response = await fetch('/api/setup', options);
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Model setup is unavailable.');
+    return data;
+  }
+
   function render(state) {
     running = state.state === 'running';
     el('setup-status').textContent = state.message + (state.error ? ' ' + state.error : '');
@@ -19,7 +27,7 @@
   }
 
   async function refresh() {
-    try { render(await api('/setup')); }
+    try { render(await request()); }
     catch (error) { el('setup-status').textContent = error.message; }
   }
 
@@ -33,7 +41,7 @@
     if (running) return;
     el('setup-download').disabled = true;
     try {
-      render(await api('/setup', {
+      render(await request({
         profile: el('setup-profile').value,
         speakers: el('setup-speakers').checked,
         models: [...el('setup-extras').querySelectorAll('input:checked')].map(input => input.value)
@@ -46,7 +54,9 @@
 
   (async () => {
     try {
-      const models = await api('/models');
+      const response = await fetch('/api/models');
+      if (!response.ok) throw new Error('Model catalog is unavailable.');
+      const models = await response.json();
       for (const model of [...models.transcription, ...models.translation].filter(model => model.id !== 'whisper')) {
         const label = document.createElement('label');
         label.className = 'setup-option';
